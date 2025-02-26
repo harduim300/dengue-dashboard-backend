@@ -38,35 +38,35 @@ const getDengueCases = async (estado, dataInicial, dataFinal) => {
   const URL_BASE = "https://info.dengue.mat.br/api/notif_reduced";
   const PARAMS = `&ages=00-04%20anos,05-09%20anos,10-19%20anos,20-29%20anos,30-39%20anos,40-49%20anos,50-59%20anos,60+%20anos&genders=Mulher,Homem&diseases=Dengue&initial_date=${dataInicial}&final_date=${dataFinal}&chart_type=disease`;
 
-  if (estado === 'BR') {
-      const estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+  const casesData = await fetch(`${URL_BASE}?state_abv=${estado}${PARAMS}`)
+      .then(res => res.text())
+      .then(data => {
+        const parsedData = parseCSV(data)
+        return {
+          casos: parsedData[0]?.casos
+        };
+      })
+      .catch(() => ({ casos: data }));
+
+  return [casesData];
+  // if (estado === 'BR') {
+  //     const estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
       
-      const casesData = await Promise.all(estados.map(state =>
-          fetch(`${URL_BASE}?state_abv=${state}${PARAMS}`)
-            .then(res => res.text())
-            .then(data => {
-              const parsedData = parseCSV(data)
-              return {
-                casos: parsedData[0]?.casos || 0
-              };
-            })
-            .catch(() => ({ casos: data }))
-      ));
+  //     const casesData = await Promise.all(estados.map(state =>
+  //         fetch(`${URL_BASE}?state_abv=${state}${PARAMS}`)
+  //           .then(res => res.text())
+  //           .then(data => {
+  //             const parsedData = parseCSV(data)
+  //             return {
+  //               casos: parsedData[0]?.casos || 0
+  //             };
+  //           })
+  //           .catch(() => ({ casos: data }))
+  //     ));
 
-      return casesData;
-  } else {
-      const casesData = await fetch(`${URL_BASE}?state_abv=${estado}${PARAMS}`)
-          .then(res => res.text())
-          .then(data => {
-            const parsedData = parseCSV(data)
-            return {
-              casos: parsedData[0]?.casos
-            };
-          })
-          .catch(() => ({ casos: data }));
-
-      return [casesData];
-  }
+  //     return casesData;
+  // } else {
+  // }
 };
 const getYearParams = () => {
   const now = new Date();
@@ -102,14 +102,14 @@ const getMunicipios = async (uf) => {
   return response.json();
 };
 
-const getTodosMunicipios = async () => {
-  console.log("Buscando todos os municípios...");
+// const getTodosMunicipios = async () => {
+//   console.log("Buscando todos os municípios...");
   
-  const url = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios";
-  const response = await fetch(url);
+//   const url = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios";
+//   const response = await fetch(url);
 
-  return response.json();
-};
+//   return response.json();
+// };
 
 
 const getDengueData = async (municipios) => {
@@ -167,39 +167,39 @@ app.get("/dengue_api/uf/:uf", async (req, res) => {
   }
 });
 
-app.get("/dengue_api/br", async (req, res) => {
-  try {
-      console.log("Iniciando coleta de dados para todo o Brasil...");
+// app.get("/dengue_api/br", async (req, res) => {
+//   try {
+//       console.log("Iniciando coleta de dados para todo o Brasil...");
 
-      const municipios = await getTodosMunicipios();
+//       const municipios = await getTodosMunicipios();
 
-      const { currentYear, lastYear, currentDate, lastYearDate } = getYearParams();
+//       const { currentYear, lastYear, currentDate, lastYearDate } = getYearParams();
 
-      const casos = await getDengueCases('BR', lastYearDate, currentDate)
+//       const casos = await getDengueCases('BR', lastYearDate, currentDate)
       
-      const totalCasos = casos.reduce((total, item) => total + Number(item.casos), 0);
+//       const totalCasos = casos.reduce((total, item) => total + Number(item.casos), 0);
 
 
-      const riscos = await getDengueData(municipios);
-      const mediaRisco = riscos.reduce((sum, r) => sum + r, 0) / riscos.length;
+//       const riscos = await getDengueData(municipios);
+//       const mediaRisco = riscos.reduce((sum, r) => sum + r, 0) / riscos.length;
 
-      const municipiosEmAlerta4 = municipios.filter((mun, index) => riscos[index] === 4);
+//       const municipiosEmAlerta4 = municipios.filter((mun, index) => riscos[index] === 4);
 
-      const nivel4Count = municipiosEmAlerta4.length;
-      const porcentagemNivel4 = (nivel4Count / municipios.length) * 100;
+//       const nivel4Count = municipiosEmAlerta4.length;
+//       const porcentagemNivel4 = (nivel4Count / municipios.length) * 100;
 
-      res.json({
-          total_municipios: municipios.length,
-          total_casos: totalCasos,
-          media_risco: mediaRisco.toFixed(2),
-          porcentagem_alerta_4: porcentagemNivel4.toFixed(2),
-      });
+//       res.json({
+//           total_municipios: municipios.length,
+//           total_casos: totalCasos,
+//           media_risco: mediaRisco.toFixed(2),
+//           porcentagem_alerta_4: porcentagemNivel4.toFixed(2),
+//       });
 
-  } catch (error) {
-      console.error("Erro ao processar dados:", error);
-      res.status(500).json({ error: "Erro ao obter dados" });
-  }
-});
+//   } catch (error) {
+//       console.error("Erro ao processar dados:", error);
+//       res.status(500).json({ error: "Erro ao obter dados" });
+//   }
+// });
 
 
 const getDengueDataByState = async (state_abv) => {
@@ -259,54 +259,54 @@ app.get("/dengue_api/grafico_uf/:estado", async (req, res) => {
   res.json(formattedData);
 });
 
-const sumByWeek = (data) => {
-  const weeklySums = {};
+// const sumByWeek = (data) => {
+//   const weeklySums = {};
 
-  data.forEach((block) => {
-    block.split("\n").forEach((line) => {
-      const parts = line.trim().split(",");
-      if (parts.length === 2 && parts[0] !== "dt_week") {
-        const date = parts[0];
-        const cases = parseInt(parts[1], 10) || 0;
+//   data.forEach((block) => {
+//     block.split("\n").forEach((line) => {
+//       const parts = line.trim().split(",");
+//       if (parts.length === 2 && parts[0] !== "dt_week") {
+//         const date = parts[0];
+//         const cases = parseInt(parts[1], 10) || 0;
 
-        if (!weeklySums[date]) {
-          weeklySums[date] = 0;
-        }
-        weeklySums[date] += cases;
-      }
-    });
-  });
+//         if (!weeklySums[date]) {
+//           weeklySums[date] = 0;
+//         }
+//         weeklySums[date] += cases;
+//       }
+//     });
+//   });
 
-  let dt_weeks = Object.keys(weeklySums);
-  let casos = Object.values(weeklySums);
+//   let dt_weeks = Object.keys(weeklySums);
+//   let casos = Object.values(weeklySums);
 
-  if (casos.length > 0 && casos[casos.length - 1] === 0) {
-    dt_weeks.pop();
-    casos.pop();
-  }
-
-
-  return {
-    dt_weeks,
-    casos
-  };
-};
+//   if (casos.length > 0 && casos[casos.length - 1] === 0) {
+//     dt_weeks.pop();
+//     casos.pop();
+//   }
 
 
-app.get("/dengue_api/grafico_br", async (req, res) => {
-  try {
-      const requests = estados.map(estado => getDengueDataByState(estado));
-      const results = await Promise.all(requests);
+//   return {
+//     dt_weeks,
+//     casos
+//   };
+// };
 
-      const formmatedData = sumByWeek(results)
 
-      res.json(formmatedData);
+// app.get("/dengue_api/grafico_br", async (req, res) => {
+//   try {
+//       const requests = estados.map(estado => getDengueDataByState(estado));
+//       const results = await Promise.all(requests);
 
-  } catch (error) {
-      console.error("Erro ao obter dados para o Brasil:", error);
-      res.status(500).json({ error: "Erro ao obter dados para o Brasil" });
-  }
-});
+//       const formmatedData = sumByWeek(results)
+
+//       res.json(formmatedData);
+
+//   } catch (error) {
+//       console.error("Erro ao obter dados para o Brasil:", error);
+//       res.status(500).json({ error: "Erro ao obter dados para o Brasil" });
+//   }
+// });
 
 
 

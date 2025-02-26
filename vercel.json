@@ -16,14 +16,6 @@
         "dest": "/server.js"
       },
       {
-        "src": "/dengue_api/br",
-        "dest": "/server.js"
-      },
-      {
-        "src": "/dengue_api/grafico_br",
-        "dest": "/server.js"
-      },
-      {
         "src": "/dengue_api/grafico_uf/(.*)",
         "dest": "/server.js"
       }
