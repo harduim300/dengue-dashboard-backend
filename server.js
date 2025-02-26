@@ -9,7 +9,7 @@ dotenv.config(); // Carregar variáveis de ambiente
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({origin: ["https://monitor-dengue.vercel.app/"]})); 
+app.use(cors({origin: ["https://monitor-dengue.vercel.app"]})); 
 app.use(express.json());
 app.use(bodyParser.json());
 
