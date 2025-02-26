@@ -12,7 +12,7 @@
         "dest": "/server.js"
       },
       {
-        "src": "/dengue_api/uf/:uf",
+        "src": "/dengue_api/uf/(.*)",
         "dest": "/server.js"
       },
       {
